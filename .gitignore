@@ -1,0 +1,4 @@
+.php-cs-fixer.cache
+/var/*.sqlite
+/var/logs/
+/vendor/
