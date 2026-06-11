@@ -1,0 +1,173 @@
+<html lang="en">
+<head>
+    <title>Chat API - Test Console</title>
+</head>
+<body>
+    <h1>Chat API - Test Console</h1>
+
+    <!-- Create User -->
+    <div style="border: 1px; padding: 10px; margin-bottom: 10px;">
+        <h2>POST /users - Create User</h2>
+        <div>
+            <label>User Name</label>
+            <input type="text" id="createUserName" style="width: 30%;">
+        </div>
+        <button onclick="createUser()">Create User</button>
+        <div id="responseCreateUser"></div>
+    </div>
+    <hr>
+
+    <!-- List Users -->
+    <div style="border: 1px; padding: 10px; margin-bottom: 10px;">
+        <h2>GET /users - List All Users</h2>
+        <button onclick="callApi('GET', '/users', null, 'responseUsers')">List Users</button>
+        <div id="responseUsers"></div>
+    </div>
+    <hr>
+
+    <!-- List Groups -->
+    <div style="border: 1px; padding: 10px; margin-bottom: 10px;">
+        <h2>GET /groups - List All Groups</h2>
+        <button onclick="callApi('GET', '/groups', null, 'responseListGroups')">List Groups</button>
+        <div id="responseListGroups"></div>
+    </div>
+    <hr>
+
+    <!-- Create Group -->
+    <div style="border: 1px; padding: 10px; margin-bottom: 10px;">
+        <h2>POST /groups - Create Group</h2>
+        <div>
+            <label>Group Name</label>
+            <input type="text" id="createGroupName" style="width: 50%;">
+        </div>
+        <div>
+            <label>User ID (UUID4)</label>
+            <input type="text" id="createGroupUserId" style="width: 288pt;">
+        </div>
+        <button onclick="createGroup()">Create Group</button>
+        <div id="responseCreateGroup"></div>
+    </div>
+    <hr>
+
+    <!-- List Group Users -->
+    <div style="border: 1px; padding: 10px; margin-bottom: 10px;">
+        <h2>GET /groups/{groupId}/users - List Group Members</h2>
+        <div>
+            <label>Group ID (UUID7)</label>
+            <input type="text" id="getGroupId" style="width: 288pt;">
+        </div>
+        <button onclick="callApi('GET', '/groups/' + document.getElementById('getGroupId').value + '/users', null, 'responseListUsers')">List Members</button>
+        <div id="responseListUsers"></div>
+    </div>
+    <hr>
+
+    <!-- Join Group -->
+    <div style="border: 1px; padding: 10px; margin-bottom: 10px;">
+        <h2>POST /groups/{groupId}/users - Join Group</h2>
+        <div>
+            <label>Group ID (UUID7)</label>
+            <input type="text" id="joinGroupId" style="width: 288pt;">
+        </div>
+        <div>
+            <label>User ID (UUID4)</label>
+            <input type="text" id="joinUserId" style="width: 288pt;">
+        </div>
+        <button onclick="joinGroup()">Join Group</button>
+        <div id="responseJoinGroup"></div>
+    </div>
+    <hr>
+
+    <!-- List Messages -->
+    <div style="border: 1px; padding: 10px; margin-bottom: 10px;">
+        <h2>GET /groups/{groupId}/messages - List Messages</h2>
+        <div>
+            <label>Group ID (UUID7)</label>
+            <input type="text" id="getMsgGroupId" style="width: 288pt;">
+        </div>
+        <button onclick="callApi('GET', '/groups/' + document.getElementById('getMsgGroupId').value + '/messages', null, 'responseListMessages')">List Messages</button>
+        <div id="responseListMessages"></div>
+    </div>
+    <hr>
+
+    <!-- Send Message -->
+    <div style="border: 1px; padding: 10px; margin-bottom: 10px;">
+        <h2>POST /groups/{groupId}/messages - Send Message</h2>
+        <div>
+            <label>Group ID (UUID7)</label>
+            <input type="text" id="sendMsgGroupId" style="width: 288pt;">
+        </div>
+        <div>
+            <label>User ID (UUID4)</label>
+            <input type="text" id="sendMsgUserId" style="width: 288pt;">
+        </div>
+        <div>
+            <label>Message Content</label>
+            <textarea id="sendMsgContent" style="width: 100%;"></textarea>
+        </div>
+        <button onclick="sendMessage()">Send Message</button>
+        <div id="responseSendMessage" class="response"></div>
+    </div>
+
+    <script>
+        async function callApi(method, path, body, responseElementId) {
+            const element = document.getElementById(responseElementId);
+            try {
+                const options = {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+                const response = await fetch(path, options);
+                const data = await response.json();
+                element.textContent = JSON.stringify(data, null, 2);
+                element.className = response.ok ? 'response success' : 'response error';
+            } catch (error) {
+                element.textContent = 'Error: ' + error.message;
+                element.className = 'response error';
+            }
+        }
+
+        function createUser() {
+            const name = document.getElementById('createUserName').value;
+            if (!name) {
+                alert('Please enter a user name');
+                return;
+            }
+            callApi('POST', '/users', { userName: name }, 'responseCreateUser');
+        }
+
+        function createGroup() {
+            const name = document.getElementById('createGroupName').value;
+            const userId = document.getElementById('createGroupUserId').value;
+            if (!name || !userId) {
+                alert('Please fill in all fields');
+                return;
+            }
+            callApi('POST', '/groups', { groupName: name, userId: userId }, 'responseCreateGroup');
+        }
+
+        function joinGroup() {
+            const groupId = document.getElementById('joinGroupId').value;
+            const userId = document.getElementById('joinUserId').value;
+            if (!groupId || !userId) {
+                alert('Please fill in all fields');
+                return;
+            }
+            callApi('POST', '/groups/' + groupId + '/users', { userId: userId }, 'responseJoinGroup');
+        }
+
+        function sendMessage() {
+            const groupId = document.getElementById('sendMsgGroupId').value;
+            const userId = document.getElementById('sendMsgUserId').value;
+            const content = document.getElementById('sendMsgContent').value;
+            if (!groupId || !userId || !content) {
+                alert('Please fill in all fields');
+                return;
+            }
+            callApi('POST', '/groups/' + groupId + '/messages', { userId: userId, content: content }, 'responseSendMessage');
+        }
+    </script>
+</body>
+</html>
